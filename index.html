@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hitster · Spotify timeline game</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <!-- The one allowed external asset: Spotify Web Playback SDK -->
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
 </head>
@@ -20,7 +20,7 @@
       <li>Set the <strong>Redirect URI</strong> to exactly this page:
         <span class="uri"><code id="redirect-uri"></code><button id="copy-uri" class="btn-ghost" type="button">Copy</button></span>
       </li>
-      <li>Under <strong>APIs used</strong>, tick <strong>Web Playback SDK</strong>.</li>
+      <li>Under <strong>"Which API/SDKs are you planning to use?"</strong>, tick <strong>BOTH</strong> <strong>Web API</strong> and <strong>Web Playback SDK</strong>. (Missing Web API causes <code>403 Forbidden</code> when loading playlists.)</li>
       <li>Copy the app's <strong>Client ID</strong> and paste it here:</li>
     </ol>
     <label class="field">
@@ -107,6 +107,6 @@
   </section>
 
 </main>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

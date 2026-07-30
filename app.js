@@ -449,10 +449,11 @@ async function pickDeck(playlistId) {
     showNewGame();
   } catch (e) {
     const msg = String(e.message || e);
-    const editorial = msg.startsWith('403') || msg.startsWith('404');
+    const forbidden = msg.startsWith('403') || msg.startsWith('404');
     $('deck-status').textContent = 'Could not load that playlist: ' + msg +
-      (editorial
-        ? ' — Spotify blocks third-party apps from reading its own editorial/algorithmic playlists (Discover Weekly, Top 50, "This Is…", genre mixes). Use one of YOUR OWN playlists below, or a normal user-made playlist.'
+      (forbidden
+        ? ' — If your OWN playlists also fail to load, your Spotify app is missing "Web API": dashboard → app Settings → Edit → tick Web API, then reconnect. ' +
+          'If only pasted links fail, it is a Spotify-owned editorial/algorithmic playlist (blocked) — use a user-made playlist instead.'
         : '');
   }
 }

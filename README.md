@@ -19,7 +19,9 @@ build step, no client secret: just three static files.
    and **Create app**.
 2. Set the **Redirect URI** to exactly the URL you're serving this page from
    (the setup screen shows it with a copy button — copy it verbatim).
-3. Under **APIs used**, tick **Web Playback SDK**.
+3. Under **"Which API/SDKs are you planning to use?"**, tick **both** **Web API**
+   and **Web Playback SDK**. (Web API is required for loading playlists — missing
+   it gives `403 Forbidden` on every deck call.)
 4. Copy the app's **Client ID** and paste it into the setup screen.
 
 Then click **Connect Spotify**, authorize, pick a playlist as your deck, add
