@@ -213,12 +213,14 @@ async function listMyPlaylists() {
   return out;
 }
 
-// Fetch all tracks, filter to playable songs, build cards.
+// Fetch all tracks across pages, filter to playable songs, build cards.
+// NOTE: reading playlist track contents (this endpoint, and the base playlist
+// object's `tracks` field) is blocked with 403 for apps still in Development
+// mode. The fix is on Spotify's side: add your account under the app's User
+// Management, and/or request Extended Quota Mode. No client change unblocks it.
 async function loadDeck(playlistId) {
   const fields = 'items(track(id,uri,name,is_local,type,is_playable,artists(name),' +
     'album(name,release_date,release_date_precision,images))),next';
-  // Real ISO country code (from /me) — `from_token` is legacy and no longer reliable.
-  // Without a valid market, is_playable is omitted and the runtime skip is the only backstop.
   const market = S.market ? `&market=${S.market}` : '';
   let path = `/playlists/${playlistId}/tracks?limit=100${market}&fields=${encodeURIComponent(fields)}`;
   const cards = [];
@@ -421,7 +423,7 @@ async function showDeckScreen() {
   try {
     const pls = await listMyPlaylists();
     $('my-playlists').innerHTML = pls.map((p) =>
-      `<li><button class="playlist-pick btn-ghost" data-id="${p.id}">${esc(p.name)} <span class="of">· ${p.tracks.total}</span></button></li>`
+      `<li><button class="playlist-pick btn-ghost" data-id="${p.id}">${esc(p.name)} <span class="of">· ${p.tracks ? p.tracks.total : '?'}</span></button></li>`
     ).join('') || '<li class="note">no playlists found</li>';
     for (const b of document.querySelectorAll('.playlist-pick')) {
       b.addEventListener('click', () => pickDeck(b.dataset.id));
@@ -449,11 +451,10 @@ async function pickDeck(playlistId) {
     showNewGame();
   } catch (e) {
     const msg = String(e.message || e);
-    const forbidden = msg.startsWith('403') || msg.startsWith('404');
+    const forbidden = msg.startsWith('403');
     $('deck-status').textContent = 'Could not load that playlist: ' + msg +
       (forbidden
-        ? ' — If your OWN playlists also fail to load, your Spotify app is missing "Web API": dashboard → app Settings → Edit → tick Web API, then reconnect. ' +
-          'If only pasted links fail, it is a Spotify-owned editorial/algorithmic playlist (blocked) — use a user-made playlist instead.'
+        ? ' — Reading playlist tracks is blocked while your Spotify app is in Development mode. In the dashboard: (1) User Management → add your account (name + the email on your Spotify account); and if still blocked (2) request Extended Quota Mode. This is a Spotify access restriction, not the game — even your own playlists are affected.'
         : '');
   }
 }
