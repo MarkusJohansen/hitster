@@ -192,12 +192,11 @@ async function playUri(uri) {
   if (!r.ok) throw new Error('play failed: ' + r.status);
 }
 
-/* ---------- Premium detection ---------- */
-async function isPremium() {
+/* ---------- Account (premium + market) ---------- */
+async function fetchMe() {
   const r = await api('/me');
-  if (!r.ok) return false;
-  const me = await r.json();
-  return me.product === 'premium';
+  if (!r.ok) return null;
+  return r.json();
 }
 
 /* ---------- Deck loading ---------- */
@@ -218,11 +217,18 @@ async function listMyPlaylists() {
 async function loadDeck(playlistId) {
   const fields = 'items(track(id,uri,name,is_local,type,is_playable,artists(name),' +
     'album(name,release_date,release_date_precision,images))),next';
-  let path = `/playlists/${playlistId}/tracks?market=from_token&limit=100&fields=${encodeURIComponent(fields)}`;
+  // Real ISO country code (from /me) — `from_token` is legacy and no longer reliable.
+  // Without a valid market, is_playable is omitted and the runtime skip is the only backstop.
+  const market = S.market ? `&market=${S.market}` : '';
+  let path = `/playlists/${playlistId}/tracks?limit=100${market}&fields=${encodeURIComponent(fields)}`;
   const cards = [];
   while (path) {
     const r = await api(path);
-    if (!r.ok) throw new Error('playlist load failed: ' + r.status);
+    if (!r.ok) {
+      let reason = '';
+      try { reason = ((await r.json()).error || {}).message || ''; } catch { /* no body */ }
+      throw new Error(`${r.status}${reason ? ' — ' + reason : ''}`);
+    }
     const j = await r.json();
     for (const item of j.items) {
       const t = item.track;
@@ -400,7 +406,10 @@ function showSetup() {
 async function afterConnected() {
   show('connecting');
   connectPlayer();
-  if (!(await isPremium())) { show('premium'); return; }
+  const me = await fetchMe();
+  if (!me || me.product !== 'premium') { show('premium'); return; }
+  S.market = me.country || null; // real ISO market for is_playable filtering
+  save();
   if (S.game) { resumeGame(); return; }
   showDeckScreen();
 }
@@ -438,8 +447,13 @@ async function pickDeck(playlistId) {
         `That often means remaster/reissue dates, not original release years — consider another playlist or fix years as you go.`;
     }
     showNewGame();
-  } catch {
-    $('deck-status').textContent = 'Could not load that playlist.';
+  } catch (e) {
+    const msg = String(e.message || e);
+    const editorial = msg.startsWith('403') || msg.startsWith('404');
+    $('deck-status').textContent = 'Could not load that playlist: ' + msg +
+      (editorial
+        ? ' — Spotify blocks third-party apps from reading its own editorial/algorithmic playlists (Discover Weekly, Top 50, "This Is…", genre mixes). Use one of YOUR OWN playlists below, or a normal user-made playlist.'
+        : '');
   }
 }
 
