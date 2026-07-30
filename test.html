@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hitster logic tests</title>
+  <style>
+    body { font: 15px/1.5 ui-monospace, Menlo, monospace; margin: 24px; background: #f5f4f1; color: #1a1a1a; }
+    .pass { color: #1a7f37; } .fail { color: #cf222e; font-weight: 700; }
+    h1 { font-size: 20px; } #summary { font-weight: 700; font-size: 18px; margin-top: 16px; }
+  </style>
+  <!-- app.js exposes window.HitsterLogic; the app itself no-ops (no #app here). -->
+  <script src="app.js"></script>
+</head>
+<body>
+<h1>Hitster logic tests</h1>
+<div id="out"></div>
+<div id="summary"></div>
+<script>
+const { gapCount, isCorrectGap, insertInYearOrder, parseYear, parsePlaylistId, remasterCluster } = window.HitsterLogic;
+let passed = 0, failed = 0;
+const out = document.getElementById('out');
+function ok(name, cond) {
+  const line = document.createElement('div');
+  line.className = cond ? 'pass' : 'fail';
+  line.textContent = (cond ? '✓ ' : '✗ ') + name;
+  out.appendChild(line);
+  cond ? passed++ : failed++;
+}
+const cards = (...ys) => ys.map((year) => ({ year }));
+
+// --- gap-index math: n cards -> n+1 gaps ---
+ok('3 cards -> 4 gaps', gapCount(cards(1969, 1985, 2001)) === 4);
+ok('0 cards -> 1 gap', gapCount([]) === 1);
+ok('1 card -> 2 gaps', gapCount(cards(1990)) === 2);
+
+// --- unique correct gap: [1985,1985,2001], new 1990 -> only gap 2 ---
+{
+  const tl = cards(1985, 1985, 2001);
+  const correct = [0, 1, 2, 3].filter((i) => isCorrectGap(tl, i, 1990));
+  ok('1990 into [1985,1985,2001] -> only gap 2', JSON.stringify(correct) === '[2]');
+}
+
+// --- full same-year tie: [1985,1985,2001], new 1985 -> every gap adjacent to a
+// same-year (1985) neighbour: gaps 0,1,2. (Gap 3 is after 2001, so it's wrong;
+// the change's tie scenario says 0,1,2,3, which contradicts its own predicate.) ---
+{
+  const tl = cards(1985, 1985, 2001);
+  const correct = [0, 1, 2, 3].filter((i) => isCorrectGap(tl, i, 1985));
+  ok('same-year tie 1985 -> gaps 0,1,2 correct (gap 3 after 2001 is wrong)', JSON.stringify(correct) === '[0,1,2]');
+}
+
+// --- boundary placement: [1969,1985,2001], new 1960 -> only gap 0 ---
+{
+  const tl = cards(1969, 1985, 2001);
+  const correct = [0, 1, 2, 3].filter((i) => isCorrectGap(tl, i, 1960));
+  ok('1960 into [1969,1985,2001] -> only gap 0', JSON.stringify(correct) === '[0]');
+  const after = [0, 1, 2, 3].filter((i) => isCorrectGap(tl, i, 2020));
+  ok('2020 into same -> only gap 3', JSON.stringify(after) === '[3]');
+}
+
+// --- single card after free card: 1 card -> both gaps accept anything ---
+{
+  const tl = cards(1990);
+  ok('single-card timeline accepts earlier at gap 0', isCorrectGap(tl, 0, 1970));
+  ok('single-card timeline accepts earlier at gap 1', isCorrectGap(tl, 1, 1970));
+  ok('single-card timeline accepts later at gap 0', isCorrectGap(tl, 0, 2010));
+  ok('single-card timeline accepts later at gap 1', isCorrectGap(tl, 1, 2010));
+}
+
+// --- insertInYearOrder keeps ascending order ---
+{
+  const tl = insertInYearOrder(cards(1969, 2001), { year: 1985 });
+  ok('insert keeps ascending', JSON.stringify(tl.map((c) => c.year)) === '[1969,1985,2001]');
+  const front = insertInYearOrder(cards(1969, 2001), { year: 1900 });
+  ok('insert at front', front[0].year === 1900);
+  const back = insertInYearOrder(cards(1969, 2001), { year: 2020 });
+  ok('insert at back', back[back.length - 1].year === 2020);
+}
+
+// --- release_date parsing across precisions ---
+ok('year precision "2015" -> 2015', parseYear('2015') === 2015);
+ok('day precision "1969-08-15" -> 1969', parseYear('1969-08-15') === 1969);
+ok('month precision "1980-03" -> 1980', parseYear('1980-03') === 1980);
+ok('null release_date -> null', parseYear(null) === null);
+
+// --- playlist id parsing, both forms ---
+ok('parse URL form', parsePlaylistId('https://open.spotify.com/playlist/37i9dQZF1DX?si=x') === '37i9dQZF1DX');
+ok('parse URI form', parsePlaylistId('spotify:playlist:37i9dQZF1DX') === '37i9dQZF1DX');
+ok('parse garbage -> null', parsePlaylistId('not a playlist') === null);
+
+// --- remaster cluster warning ---
+{
+  const heavy = Array(10).fill(2015).concat([1969, 1985]); // ~83% on 2015
+  ok('flags remaster-heavy recent cluster', !!remasterCluster(heavy, 2026));
+  const spread = [1969, 1972, 1985, 1991, 2001, 2010, 2015, 1988];
+  ok('does not flag a well-spread deck', remasterCluster(spread, 2026) === null);
+  const oldCluster = Array(10).fill(1970); // clustered but not recent
+  ok('does not flag an old cluster', remasterCluster(oldCluster, 2026) === null);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

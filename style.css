@@ -1,0 +1,165 @@
+/* Swiss skeleton: fixed spacing scale, sharp corners, hairline rules,
+   near-monochrome ground, ONE accent that only ever carries meaning.
+   Album art is the single material that carries colour (on reveal). */
+
+:root {
+  /* spacing scale — the only spacing values allowed */
+  --s1: 4px;  --s2: 8px;  --s3: 16px; --s4: 24px;
+  --s5: 32px; --s6: 48px; --s7: 64px;
+
+  /* near-monochrome ground (not pure #000/#fff for body) */
+  --ink: #1a1a1a;
+  --paper: #f5f4f1;
+  --panel: #ffffff;
+  --hairline: #d6d4cf;
+  --muted: #6c6a65;
+
+  /* the one accent — turn / active control / correct state */
+  --accent: #e5484d;
+  --accent-ink: #ffffff;
+  --wrong: #6c6a65; /* wrong reveal reads via type/label, accent stays for "active" */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Helvetica Neue", Helvetica, Arial, "Inter", system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--s6) var(--s4);
+}
+
+.screen { display: block; }
+[hidden] { display: none !important; }
+
+/* ---- type scale (size + weight carry hierarchy) ---- */
+.display {
+  font-size: clamp(56px, 12vw, 128px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  margin: 0 0 var(--s4);
+}
+.title { font-size: clamp(28px, 5vw, 48px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--s4); }
+.lede { font-size: 20px; max-width: 60ch; color: var(--ink); margin: 0 0 var(--s4); }
+.label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.note { color: var(--muted); font-size: 15px; }
+.warning { color: var(--ink); border-left: 3px solid var(--accent); padding-left: var(--s3); font-size: 15px; max-width: 60ch; }
+
+/* ---- setup steps ---- */
+.steps { max-width: 62ch; padding-left: var(--s4); }
+.steps li { margin-bottom: var(--s3); }
+.uri {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  margin-top: var(--s2);
+}
+.uri code {
+  background: var(--panel); border: 1px solid var(--hairline);
+  padding: var(--s1) var(--s2); font-size: 14px; word-break: break-all;
+}
+a { color: var(--ink); text-underline-offset: 3px; }
+
+/* ---- fields & buttons (sharp corners, hairlines, no shadows) ---- */
+.field { display: block; margin: var(--s4) 0; }
+.field .label { display: block; margin-bottom: var(--s2); }
+input[type="text"], input[type="number"] {
+  width: 100%; max-width: 420px;
+  font: inherit; padding: var(--s2) var(--s3);
+  border: 1px solid var(--ink); border-radius: 0; background: var(--panel); color: var(--ink);
+}
+#player-inputs input { margin-bottom: var(--s2); display: block; }
+.row { display: flex; gap: var(--s3); margin-top: var(--s2); }
+
+button { font: inherit; cursor: pointer; border-radius: 0; }
+.btn-primary {
+  background: var(--ink); color: var(--paper);
+  border: 1px solid var(--ink); padding: var(--s3) var(--s5);
+  font-weight: 700; letter-spacing: 0.02em;
+}
+.btn-primary:disabled { background: var(--hairline); border-color: var(--hairline); color: var(--muted); cursor: not-allowed; }
+.btn-ghost {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--hairline); padding: var(--s2) var(--s3);
+}
+.btn-ghost:hover { border-color: var(--ink); }
+
+.rule { border: none; border-top: 1px solid var(--hairline); margin: var(--s5) 0; }
+
+.playlist-list { list-style: none; padding: 0; display: grid; gap: var(--s2); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.playlist-list button { width: 100%; text-align: left; }
+.of { color: var(--muted); font-weight: 400; }
+
+/* ---- scoreboard: active turn via accent, counts via type ---- */
+.scoreboard {
+  display: flex; flex-wrap: wrap; gap: var(--s3);
+  border-bottom: 1px solid var(--hairline); padding-bottom: var(--s3); margin-bottom: var(--s5);
+}
+.score { padding: var(--s2) var(--s3); border: 1px solid var(--hairline); min-width: 120px; }
+.score.active { border-color: var(--accent); border-width: 2px; }
+.score.active .score-name { color: var(--accent); }
+.score-name { display: block; font-weight: 700; }
+.score-count { font-size: 28px; font-weight: 800; }
+
+.now-playing { margin-bottom: var(--s5); }
+.playbar { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s2); }
+.turn-name { font-size: 22px; font-weight: 700; }
+
+/* ---- timeline: oversized year is the dominant type ---- */
+.timeline-wrap { overflow-x: auto; padding-bottom: var(--s3); }
+.timeline { display: flex; align-items: stretch; gap: 0; min-height: 160px; }
+
+.tl-card {
+  flex: 0 0 auto; width: 160px;
+  border: 1px solid var(--ink);
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: var(--s3);
+  background:
+    linear-gradient(0deg, rgba(255,255,255,0.86), rgba(255,255,255,0.86)),
+    var(--art, none);
+  background-size: cover; background-position: center;
+}
+.tl-year { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+.tl-meta { font-size: 13px; color: var(--muted); margin-top: var(--s2); }
+
+.gap {
+  flex: 0 0 auto; width: 44px; align-self: stretch;
+  border: 1px dashed var(--hairline); background: transparent;
+  color: var(--muted); font-size: 22px;
+}
+.gap:hover, .gap:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.gap.chosen { border: 2px solid var(--accent); color: var(--accent); background: rgba(229,72,77,0.06); }
+
+.actions { margin-top: var(--s5); }
+
+/* ---- reveal: album art carries the colour ---- */
+.reveal-card {
+  margin-top: var(--s5);
+  display: grid; grid-template-columns: minmax(120px, 280px) 1fr;
+  gap: var(--s5); align-items: center;
+  border: 2px solid var(--ink); padding: var(--s5);
+}
+.reveal-card.correct { border-color: var(--accent); }
+.reveal-card .cover { width: 100%; height: auto; display: block; border: 1px solid var(--hairline); }
+.reveal-year { font-size: clamp(64px, 12vw, 120px); font-weight: 800; line-height: 0.9; letter-spacing: -0.03em; }
+.reveal-title { font-size: 26px; font-weight: 700; margin-top: var(--s2); }
+.reveal-artist { font-size: 20px; color: var(--ink); }
+.reveal-album { font-size: 16px; color: var(--muted); margin-top: var(--s1); }
+.reveal-verdict { margin: var(--s4) 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.reveal-card.correct .reveal-verdict { color: var(--accent); }
+.reveal-body button { margin-right: var(--s3); margin-top: var(--s2); }
+
+/* ---- phone reflow ---- */
+@media (max-width: 560px) {
+  #app { padding: var(--s4) var(--s3); }
+  .reveal-card { grid-template-columns: 1fr; }
+  .tl-card { width: 130px; }
+}

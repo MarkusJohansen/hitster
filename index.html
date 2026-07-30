@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hitster · Spotify timeline game</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- The one allowed external asset: Spotify Web Playback SDK -->
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+</head>
+<body>
+<main id="app">
+
+  <!-- Setup: guided app registration -->
+  <section id="screen-setup" class="screen" hidden>
+    <h1 class="display">Hitster</h1>
+    <p class="lede">A music timeline game driven by your own Spotify. No backend, no secret — you register a personal Spotify app once.</p>
+    <ol class="steps">
+      <li>Open the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noreferrer">Spotify developer dashboard</a> and <strong>Create app</strong>.</li>
+      <li>Set the <strong>Redirect URI</strong> to exactly this page:
+        <span class="uri"><code id="redirect-uri"></code><button id="copy-uri" class="btn-ghost" type="button">Copy</button></span>
+      </li>
+      <li>Under <strong>APIs used</strong>, tick <strong>Web Playback SDK</strong>.</li>
+      <li>Copy the app's <strong>Client ID</strong> and paste it here:</li>
+    </ol>
+    <label class="field">
+      <span class="label">Client ID</span>
+      <input id="client-id" type="text" autocomplete="off" spellcheck="false" placeholder="paste Client ID">
+    </label>
+    <button id="connect" class="btn-primary" type="button">Connect Spotify</button>
+    <p class="note">Spotify <strong>Premium</strong> is required (the Web Playback SDK only plays for Premium accounts).</p>
+  </section>
+
+  <section id="screen-connecting" class="screen" hidden>
+    <p class="lede">Connecting to Spotify…</p>
+  </section>
+
+  <section id="screen-premium" class="screen" hidden>
+    <h2 class="title">Spotify Premium required</h2>
+    <p class="lede">This account is not Premium. The Web Playback SDK only streams for Premium accounts, so the game can't play tracks. Connect a Premium account to play.</p>
+    <button id="premium-reset" class="btn-ghost" type="button">Use a different account</button>
+  </section>
+
+  <!-- Deck selection -->
+  <section id="screen-deck" class="screen" hidden>
+    <h2 class="title">Choose a deck</h2>
+    <label class="field">
+      <span class="label">Paste a playlist link or URI</span>
+      <input id="playlist-url" type="text" autocomplete="off" spellcheck="false"
+             placeholder="https://open.spotify.com/playlist/… or spotify:playlist:…">
+    </label>
+    <button id="load-pasted" class="btn-primary" type="button">Load this playlist</button>
+    <hr class="rule">
+    <p class="label">…or pick one of yours</p>
+    <ul id="my-playlists" class="playlist-list"></ul>
+    <p id="deck-status" class="note" role="status"></p>
+    <p id="remaster-warning" class="warning" role="status" hidden></p>
+  </section>
+
+  <!-- New game -->
+  <section id="screen-newgame" class="screen" hidden>
+    <h2 class="title">New game</h2>
+    <p id="deck-summary" class="note"></p>
+    <label class="field">
+      <span class="label">Players</span>
+      <div id="player-inputs"></div>
+      <div class="row">
+        <button id="add-player" class="btn-ghost" type="button">+ player</button>
+        <button id="remove-player" class="btn-ghost" type="button">− player</button>
+      </div>
+    </label>
+    <label class="field">
+      <span class="label">Cards to win</span>
+      <input id="target" type="number" min="3" max="30" value="10">
+    </label>
+    <button id="start-game" class="btn-primary" type="button">Start game</button>
+  </section>
+
+  <!-- Board -->
+  <section id="screen-board" class="screen" hidden>
+    <header id="scoreboard" class="scoreboard"></header>
+
+    <div id="now-playing" class="now-playing">
+      <p class="label">Now playing — where does it go?</p>
+      <div class="playbar">
+        <button id="replay" class="btn-ghost" type="button">▶ Replay</button>
+        <span id="turn-name" class="turn-name"></span>
+      </div>
+    </div>
+
+    <div id="timeline-wrap" class="timeline-wrap">
+      <div id="timeline" class="timeline"></div>
+    </div>
+
+    <div class="actions">
+      <button id="reveal" class="btn-primary" type="button" disabled>Reveal</button>
+    </div>
+
+    <!-- Reveal card, populated only at reveal time (hidden state stays out of the DOM until then) -->
+    <div id="reveal-card" class="reveal-card" hidden></div>
+  </section>
+
+  <section id="screen-win" class="screen" hidden>
+    <h1 class="display" id="winner-name"></h1>
+    <p class="lede">wins.</p>
+    <button id="play-again" class="btn-primary" type="button">Play again</button>
+  </section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
